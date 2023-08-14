@@ -1,0 +1,426 @@
+---
+title: "Machine Learning and Neural Network <br> Based Diabetes Classification"
+author: "Abhishek N N 7abhisheknn@gmail.com"
+output: rmdformats::readthedown
+---
+# Abstract
+One of the most important health issues in both industrialized and developing nations is diabetes mellitus. Consequently, the According to the International Diabetes Federation, 425 million people worldwide have diabetes. Within 20 years, this number is projected to increase to 380 million. Due to its significance, a classifier design for the early diagnosis of diabetes that is both affordable and effective is now necessary. Testing data mining methods to determine their predictive accuracy in the classification of diabetes data has become a standard at the UCI machine learning lab using the Puma Indian diabetic database. The machine learning technique is focused on categorizing the diabetic illness from a large medical data set into type 1 and type 2. The goal of this project is to create a model that can predict a patient's chance of developing diabetes with the highest degree of accuracy. As a result, this experiment uses Decision Tree, Naive Bayes, Random Forest, Kernel SVM and Logistic Regression five machine learning classification methods, to identify diabetes at an early stage. Confusion Matrix, Precision, Accuracy, F-Measure, and Recall are just a few of the metrics used to assess how well the three algorithms perform. Correctly and wrongly labelled examples are used to gauge accuracy. According to the results, Logistic Regression surpasses other algorithms with a highest accuracy of 79.6%. These findings are properly and methodically validated using performance metrics and ROC curves.
+
+## Keywords
+Diabetes, Logistic Regression, Kernel SVM, Naïve Bayes, Decision Tree, Random Forest Accuracy Machine Learning
+
+# Introduction
+In the medical industry, classification algorithms are frequently used to categories data into different groups in accordance with specified constraints as opposed to using a single classifier. Diabetes is a condition that impairs the body's ability to produce the hormone insulin, which causes improper carbohydrate metabolism and raises blood glucose levels. A person with diabetes typically experiences elevated blood sugar. Increased hunger, increased thirst, and frequent urination are a few signs and symptoms of high blood sugar. Diabetes has a lot of side effects if it is not addressed. Diabetes-related ketoacidosis and nonketotic hyperosmolar be managed are two serious consequences. Diabetes is influenced by a number of variables, including height, weight, hereditary factors, and insulin, but the main component that is taken into consideration is sugar concentration among all factors. The early identification is the only remedy to stay away from the complications. Diabetes is examined as a vital serious health matter during which the measure of sugar substance cannot parentheses, following the example. Some components, such as multi-leveled equations, graphics, and tables are not prescribed, although the various table text styles are provided. The formatter will need to create these components, incorporating the applicable criteria that follow.
+
+### importing libraries
+```{r}
+library(corrplot)
+library(ggvis)
+library(caTools)
+library(caret)
+library(MLmetrics)
+library(ROCR)
+library(pROC)
+library(rpart)
+library(e1071)
+library(randomForest)
+library(xgboost)
+library(tidyverse)
+```
+
+
+# Dataset
+## PIDD-Pima Indians Diabetes Dataset
+The proposed methodology is evaluated on Diabetes Dataset namely (PIDD), which is taken from UCI Repository. This dataset comprises of medical detail of 768 instances which are female patients. The dataset also comprises numeric-valued 8 attributes where value of one class ’0’ treated as tested negative for diabetes and value of another class ’1’ is treated as tested positive for diabetes. Dataset description is defined by Table-4 and the Table-5 represents Attributes descriptions.
+
+```{r}
+data = read.csv("D:\\6th_winter_sem_22_23\\cse3506_eda\\project\\source_code\\data\\diabetes.csv")
+head(data)
+summary(data)
+str(data)
+sum(is.na(data))
+```
+## Correlation Matrix
+```{r}
+correlations <- cor(data)
+correlations
+corrplot(correlations, method="color")
+```
+Data cleaning is the process of correcting or eliminating data that is erroneous, corrupted, poorly formatted, duplicate, or incomplete within a data set. We have removed some unnecessary features of our data by careful observations and experimentation. We implemented correlation heat maps. They help us to understand which variables are related to each other and the strength of this relationship. The FIGURE 2 depicts scatter plot matrix of the individual features of the PIDD data set. 
+## Visualization
+```{r}
+par(mar=c(1,1,1,1))
+pairs(data, col=data$Outcome)
+data %>% ggvis(~Glucose,~Insulin,fill =~Outcome) %>% layer_points()
+data %>% ggvis(~BMI,~DiabetesPedigreeFunction,fill =~Outcome) %>% layer_points()
+data %>% ggvis(~Age,~Pregnancies,fill =~Outcome) %>% layer_points()
+chisq.test(data)
+```
+By observation, we notice Age and Pregnancies features are very much correlated. To achieve a good machine learning model, we removed Pregnancies feature as Age was more correlated to Outcome. We also removed Skin Thickness from all the models as it has very slight correlation with the outcome. Having features which do not contribute to the final result makes the model more complex and inefficient.
+
+# Methedology Used
+Learning (determining) appropriate values for all the weights and the bias from labelled instances is sufficient for training a model. In this experiment, we will use several machine learning methods to Figure out whether an individual has type-1 or type-2 diabetes.
+
+## Models
+### Logistic Regression
+Logistic regression uses independent variables to estimate the probability of an event, such as voting or not voting. Since the outcome is probabilistic, the dependent variable is between 0 and 1. In logistic regression, odds—the probability of success divided by the probability of failure are logit transformed. The following formulas represent this logistic function, also known as the log odds or natural logarithm of odds.
+
+### Naive Bayes Classifier 
+Naïve Bayes algorithm is a supervised learning algorithm, which is based on Bayes theorem and used for solving classification problems. Bayes' theorem is used to determine the probability of a hypothesis with prior knowledge. It depends on the conditional probability [28].
+P(B|A)=(P(B|A)×P(A))/(P(B))	[3]
+Where,
+“P(A|B) is Posterior probability: Probability of hypothesis A on the observed event B.
+  P(B|A) is Likelihood probability: Probability of the evidence given that the probability of a hypothesis is true.
+  P(A) is Prior Probability: Probability of hypothesis before observing the evidence.
+  P(B) is Marginal Probability: Probability of Evidence .”
+  
+### Decision Tree Classifier
+The Decision Tree Classifier builds a tree-like structure with core nodes representing decisions based on input attributes and leaf nodes representing predictions. Create a tree that predicts the target variable for fresh data.
+The most informative feature is used to partition the dataset and build the tree. This method is continued recursively for each child node until a stopping requirement is reached, such as a maximum tree depth or minimum leaf node sample count.
+For a new instance, the algorithm begins at the root node and continues the route down the tree depending on the input feature values until it reaches a leaf node, which delivers the anticipated target value.
+
+### Kernel SVM
+Support Vector Machine (SVM) is a technique for supervised learning that can be applied to problems of classification and regression. In mathematics, SVM is represented by the equation.
+
+Linear SVM:	y(x)=w^T×x+b	[4]
+Nonlinear SVM: 	y(x)=w^T×φ(x)+b	[5]
+ 
+where y(x) is the predicted output, w is the weight vector, x is the input vector, and b is the bias term.
+φ(x) is a function that maps the input x into a higher dimensional space where a linear boundary is used to separate the data.
+
+### Random Forest
+Random forest uses numerous decision trees to increase model accuracy and resilience for regression and categorization. The random forest technique builds decision trees using randomly chosen subsets of input attributes and training data. Each tree is created by picking the optimal split at each node using a subset of characteristics from a bootstrap sample of the training data. The random forest model predicts by aggregating all tree projections.
+
+## Performance Metrics
+We compared the efficacy of several models using a wide range of performance indicators such as accuracy, precision, recall, F-measure, and ROC. In machine learning and data science, these metrics are often used to evaluate the performance of models in a variety of contexts and context-specific tasks, such as classification, regression, and clustering. Through the use of a variety of measures, we are better able to assess a model's performance and choose the most appropriate one for a specific situation.
+
+### Accuracy
+
+Accuracy is one metric for evaluating classification models. Informally, accuracy is the fraction of predictions our model got right. Formally, accuracy has the following definition [23]:
+
+Accuracy=  (Number of correct predications)/(Total number of predications)  =  (TP+TN)/(TP+TN+FP+FN)	[6]
+
+Where TP = True Positives, TN = True Negatives, FP = False Positives, and FN = False Negatives .
+
+### Precision
+
+Precision attempts to answer what proportion of positive identifications is correct. Precision is defined as follows [24]:
+Precision=  TP/(TP+FP)	[7]
+Where TP = True Positives, and FP = False Positives .
+
+### Recall
+
+Recall attempts to answer what proportion of actual positives was identified correctly, mathematically recall is defined as follows:
+Recall=  TP/(TP+FN)	[8]
+Where TP = True Positives, and FN = False Negatives .
+
+### F-Measure
+
+The F-Measure, also called the F1-score, is a measure of a model’s accuracy on a dataset. It is used to evaluate binary classification systems. The F-score is a way of combining the precision and recall of the model, and it is defined as the harmonic mean of the model’s precision and recall [25]. Mathematically F-Measure is defined as follows:
+F_1=  TP/(TP+1/2×(FP+FN))		[9]
+Where TP = True Positives, FP = False Positives, and FN = False Negatives.
+
+### ROC
+
+An ROC curve (receiver operating characteristic curve) is a graph showing the performance of a classification model at all classification thresholds. This curve plots two parameters True Positive Rate and False Positive Rate [26].
+True Positive Rate (TPR) =  TP/(TP+FN)	[10]
+
+False Positive Rate (FPR) =  FP/(FP+TN)	[11]
+
+Where TP = True Positives, TN = True Negatives, FP = False Positives, and FN = False Negatives .
+
+### AUC
+
+AUC stands for "Area under the ROC Curve." That is, AUC measures the entire two-dimensional area underneath the entire ROC curve (think integral calculus) from (0,0) to (1,1) .
+
+# Preparing the data
+```{r}
+set.seed(8)
+split <- sample.split(data$Outcome, SplitRatio = 0.75)
+data_train <- subset(data, split == TRUE)
+data_test <- subset(data, split == FALSE)
+```
+# Decision Tree Classification
+```{r}
+model_dt = rpart(formula = Outcome ~ .-Insulin-SkinThickness,data = data_train)
+model_dt
+predict_train_dt = predict(model_dt, newdata = data_train[1:(length(data_train)-1)])
+predict_test_dt <- predict(model_dt, newdata = data_test[1:(length(data_test)-1)])
+predict_test_dt <- round(predict_test_dt)
+```
+## Confusion Matrix
+```{r}
+cf_dt=confusionMatrix(as.factor(data_test$Outcome), as.factor(predict_test_dt))
+cf_dt
+```
+## F1 Score
+```{r}
+F1_Score(predict_test_dt,data_test$Outcome)
+```
+## Precision
+```{r}
+cf_dt$table[1,1]/sum(cf_dt$table[1,1:2])
+```
+## Recall
+```{r}
+cf_dt$table[1,1]/sum(cf_dt$table[1:2,1])
+```
+## ROC
+```{r}
+ROCRpred_dt <- prediction(predict_test_dt, data_test$Outcome)
+ROCRperf_dt <- performance(ROCRpred_dt, 'tpr','fpr')
+plot(ROCRperf_dt, colorize = TRUE, text.adj = c(-0.2,1.7))
+```
+## AUC
+```{r}
+roc_object_dt <- roc( data_test$Outcome, predict_test_dt)
+auc(roc_object_dt)
+```
+# Naive Bayes
+```{r}
+model_nb = naiveBayes(x = data_train[c(-1,-4,-9)], y = data_train$Outcome)
+model_nb
+predict_train_nb = predict(model_nb, newdata = data_train[1:(length(data_train)-1)])
+predict_test_nb <- predict(model_nb, newdata = data_test[1:(length(data_test)-1)])
+```
+## Confusion Matrix
+```{r}
+cf_nb=confusionMatrix(as.factor(data_test$Outcome), as.factor(predict_test_nb))
+cf_nb
+```
+## F1 Score
+```{r}
+F1_Score(predict_test_nb,data_test$Outcome)
+```
+## Precision
+```{r}
+cf_nb$table[1,1]/sum(cf_nb$table[1,1:2])
+```
+## Recall
+```{r}
+cf_nb$table[1,1]/sum(cf_nb$table[1:2,1])
+```
+## ROC
+```{r}
+ROCRpred_nb <- prediction(as.numeric(predict_test_nb), data_test$Outcome)
+ROCRperf_nb <- performance(ROCRpred_nb, 'tpr','fpr')
+plot(ROCRperf_nb, colorize = TRUE, text.adj = c(-0.2,1.7))
+```
+## AUC
+```{r}
+roc_object_nb <- roc( data_test$Outcome, as.numeric(predict_test_nb))
+auc(roc_object_nb)
+```
+
+
+# Random Forest
+```{r}
+model_rf = randomForest(x = data_train[c(-1,-4,-9)], y = data_train$Outcome, ntree = 500)
+model_rf
+predict_train_rf = predict(model_rf, newdata = data_train[1:(length(data_train)-1)])
+predict_test_rf <- predict(model_rf, newdata = data_test[1:(length(data_test)-1)])
+predict_test_rf<-round(predict_test_rf)
+```
+## Confusion Matrix
+```{r}
+cf_rf=confusionMatrix(as.factor(data_test$Outcome), as.factor(predict_test_rf))
+cf_rf
+```
+## F1 Score
+```{r}
+F1_Score(predict_test_rf,data_test$Outcome)
+```
+## Precision
+```{r}
+cf_rf$table[1,1]/sum(cf_rf$table[1,1:2])
+```
+## Recall
+```{r}
+cf_rf$table[1,1]/sum(cf_rf$table[1:2,1])
+```
+## ROC
+```{r}
+predict_train_rf<-as.numeric(predict_train_rf)
+predict_test_rf<-as.numeric(predict_test_rf)
+ROCRpred_rf <- prediction(predict_test_rf, data_test$Outcome)
+ROCRperf_rf <- performance(ROCRpred_rf, 'tpr','fpr')
+plot(ROCRperf_rf, colorize = TRUE, text.adj = c(-0.2,1.7))
+```
+## AUC
+```{r}
+roc_object_rf <- roc( data_test$Outcome, predict_test_rf)
+auc( roc_object_rf )
+```
+
+# Kernal SVM
+```{r}
+model_svm = svm(formula = Outcome ~ .-SkinThickness -Pregnancies ,
+             data = data_train,
+             type = 'C-classification',
+             kernel = 'radial')
+model_svm
+predict_train_svm = predict(model_svm, newdata = data_train[1:(length(data_train)-1)])
+predict_test_svm <- predict(model_svm, newdata = data_test[1:(length(data_test)-1)])
+```
+## Confusion Matrix
+```{r}
+cf_svm = confusionMatrix(as.factor(data_test$Outcome), as.factor(predict_test_svm))
+cf_svm
+```
+## F1 Score
+```{r}
+F1_Score(predict_test_svm,data_test$Outcome)
+```
+## Precision
+```{r}
+cf_svm$table[1,1]/sum(cf_svm$table[1,1:2])
+```
+## Recall
+```{r}
+cf_svm$table[1,1]/sum(cf_svm$table[1:2,1])
+```
+## ROC
+```{r}
+predict_train_svm<-as.numeric(predict_train_svm)
+predict_test_svm<-as.numeric(predict_test_svm)
+ROCRpred_svm <- prediction(predict_test_svm, data_test$Outcome)
+ROCRperf_svm <- performance(ROCRpred_svm, 'tpr','fpr')
+plot(ROCRperf_svm, colorize = TRUE, text.adj = c(-0.2,1.7))
+```
+## AUC
+```{r}
+roc_object_svm <- roc( data_test$Outcome, predict_test_svm)
+auc( roc_object_svm )
+```
+
+# Logistic Regression
+```{r}
+model_lr <- glm (formula = Outcome ~.-Pregnancies -SkinThickness , data = data_train, family = binomial)
+summary(model_lr)
+predict_train_lr <- predict(model_lr, type = 'response')
+predict_test_lr <- predict(model_lr, newdata = data_test, type = 'response')
+```
+## Confusion Matrix
+```{r}
+cf_lr = confusionMatrix(as.factor(data_test$Outcome), as.factor(round(predict_test_lr)))
+cf_lr
+```
+## F1 Score
+```{r}
+F1_Score(as.factor(round(predict_test_lr)),data_test$Outcome)
+```
+## Precision
+```{r}
+cf_lr$table[1,1]/sum(cf_lr$table[1,1:2])
+```
+## Recall
+```{r}
+cf_lr$table[1,1]/sum(cf_lr$table[1:2,1])
+```
+## ROC
+```{r}
+ROCRpred <- prediction(predict_test_lr, data_test$Outcome)
+ROCRperf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7))
+```
+## AUC
+```{r}
+roc_object_lr <- roc( data_test$Outcome, predict_test_lr)
+auc( roc_object_lr )
+```
+
+
+# XGBoost
+```{r}
+model_xgb <- xgboost(data = as.matrix(data_train[c(-1,-4,-9)]), label = data_train$Outcome, nrounds = 10)
+summary(model_xgb)
+predict_train_xgb <- predict(model_xgb, newdata = as.matrix(data_train[c(-1,-4,-9)]))
+predict_test_xgb <- predict(model_xgb, newdata = as.matrix(data_test[c(-1,-4,-9)]))
+```
+## Confusion Matrix
+```{r}
+cf_xgb = confusionMatrix(as.factor(data_test$Outcome), as.factor(round(predict_test_xgb)))
+cf_xgb
+```
+## F1 Score
+```{r}
+F1_Score(as.factor(round(predict_test_xgb)),data_test$Outcome)
+```
+## Precision
+```{r}
+cf_xgb$table[1,1]/sum(cf_lr$table[1,1:2])
+```
+## Recall
+```{r}
+cf_xgb$table[1,1]/sum(cf_lr$table[1:2,1])
+```
+## ROC
+```{r}
+ROCRpred <- prediction(predict_test_xgb, data_test$Outcome)
+ROCRperf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7))
+```
+## AUC
+```{r}
+roc_object_lr <- roc( data_test$Outcome, predict_test_lr)
+auc( roc_object_lr )
+```
+
+
+# Neural Network
+```{r}
+library(neuralnet)
+model_nn = neuralnet(
+  Outcome ~.-Pregnancies -SkinThickness,
+  data=data_train,
+  hidden=c(4,2),
+  linear.output=TRUE,
+  stepmax=1e7
+)
+predict_test_nn <- predict(model_nn, data_test)
+plot(model_nn,rep = "best")
+```
+## F1 Score
+```{r}
+F1_Score(as.factor(round(predict_test_xgb)),data_test$Outcome)
+```
+## Precision
+```{r}
+cf_xgb$table[1,1]/sum(cf_lr$table[1,1:2]) 
+```
+## Recall
+```{r}
+cf_xgb$table[1,1]/sum(cf_lr$table[1:2,1])
+```
+## ROC
+```{r}
+detach(package:neuralnet)
+ROCRpred <- prediction(predict_test_nn, data_test$Outcome)
+ROCRperf <- performance(ROCRpred, 'tpr','fpr')
+plot(ROCRperf, colorize = TRUE, text.adj = c(-0.2,1.7))
+```
+## AUC
+```{r}
+roc_object_lr <- roc( data_test$Outcome, predict_test_lr)
+auc( roc_object_lr )
+```
+
+# Inference
+For better performance attributes should be independent to each other and outcome should be depend-ent on attributes. we took inference from correlation matrix and removed insulin and skin thickness. Be-cause insulin was highly correlated with glucose and skin thickness was highly correlated with BMI and both insulin and skin thickness are less correlated to output when compared to glucose and BMI respec-tively. Also, we removed pregnancy because it had almost no correlation with outcome. This infers that there we redundant attributes such as Insulin and skin thickness and unnecessary attributes such as preg-nancy in diabetes dataset. This feature selection led to significant improvement in performance for exam-ple old accuracy and new accuracy with feature selection as displayed. Also, for all the model’s confusion matrix and ROC curve given respectively and accuracy, f measure, recall, precision, and AUC
+
+# Conclusion Future Work
+Through this paper we have got highest accuracy of 79.69% by Logistic Regression for classifying type-1 or type-2 diabetes for PIDD dataset by removing pregnancy, insulin, and body thickness.
+The future work of the article is to continue to enhance performance through the application of deep learning and the addition of cutting-edge optimization techniques.
+
+
+
+
+
+
+
+
+
+
+
+
+
